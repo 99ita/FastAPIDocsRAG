@@ -1,0 +1,18 @@
+embeddings:
+  model: sentence-transformers/all-MiniLM-L6-v2
+  type: local
+ingestion:
+  chunk_overlap: 200
+  chunk_size: 1000
+  docs_dir: ./docs
+  docs_src_dir: ./docs_src
+  quality_filters:
+    max_word_count: 2000
+    min_word_count: 10
+mkdocs:
+  config_file: ./mkdocs.yml
+storage:
+  local:
+    chunks_file: processed_chunks.jsonl
+    metadata_file: metadata_lookup.json
+  type: local

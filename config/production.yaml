@@ -1,0 +1,24 @@
+# FastAPI Documentation RAG Production Configuration
+
+ingestion:
+  docs_dir: "./docs"
+  docs_src_dir: "./docs_src"
+  chunk_size: 1000
+  chunk_overlap: 200
+  quality_filters:
+    min_word_count: 10
+    max_word_count: 2000
+
+storage:
+  type: "gcs"
+  gcs:
+    bucket_name: "fastapi-docs-rag"
+    chunks_file: "processed_chunks.jsonl"
+    metadata_file: "metadata_lookup.json"
+
+embeddings:
+  type: "vertex"
+  model: "textembedding-gecko@003"
+
+mkdocs:
+  config_file: "./mkdocs.yml"
