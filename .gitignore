@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# JSON files (protect service account keys and local metadata)
+*.json
+
+# Python cache and virtual environment
+__pycache__/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+output/
+*.log

@@ -109,3 +109,62 @@ class Config:
     def embedding_type(self) -> str:
         """Get embedding backend type."""
         return self.get("embeddings.type", "local")
+    
+    @property
+    def output_base_dir(self) -> str:
+        """Get output base directory."""
+        return self.get("output.base_dir", "./output")
+    
+    @property
+    def ingestion_output_dir(self) -> str:
+        """Get ingestion output directory."""
+        base_dir = self.output_base_dir
+        ingestion_dir = self.get("output.ingestion_dir", "ingestion")
+        return f"{base_dir}/{ingestion_dir}"
+    
+    @property
+    def embedding_output_dir(self) -> str:
+        """Get embedding output directory."""
+        base_dir = self.output_base_dir
+        embedding_dir = self.get("output.embedding_dir", "embedding")
+        return f"{base_dir}/{embedding_dir}"
+    
+    @property
+    def gcp_project_id(self) -> str:
+        """Get GCP project ID."""
+        return self.get("gcp.project_id", os.getenv("GCP_PROJECT_ID", ""))
+    
+    @property
+    def gcp_location(self) -> str:
+        """Get GCP location."""
+        return self.get("gcp.location", os.getenv("GCP_LOCATION", ""))
+    
+    @property
+    def vector_search_endpoint(self) -> str:
+        """Get vector search endpoint."""
+        return self.get("vector_search.endpoint", "")
+    
+    @property
+    def vector_search_dimensions(self) -> int:
+        """Get vector search dimensions."""
+        return self.get("vector_search.dimensions", 768)
+    
+    @property
+    def vector_search_top_k(self) -> int:
+        """Get vector search top_k results."""
+        return self.get("vector_search.top_k", 5)
+    
+    @property
+    def gemini_model(self) -> str:
+        """Get Gemini model name."""
+        return self.get("gemini.model", "gemini-1.5-flash")
+    
+    @property
+    def gemini_max_tokens(self) -> int:
+        """Get Gemini max tokens."""
+        return self.get("gemini.max_tokens", 4096)
+    
+    @property
+    def gemini_temperature(self) -> float:
+        """Get Gemini temperature."""
+        return self.get("gemini.temperature", 0.1)

@@ -11,8 +11,38 @@ ingestion:
     min_word_count: 10
 mkdocs:
   config_file: ./mkdocs.yml
+output:
+  base_dir: ./output
+  ingestion_dir: ingestion
+  embedding_dir: embedding
 storage:
   local:
-    chunks_file: processed_chunks.jsonl
-    metadata_file: metadata_lookup.json
-  type: local
+    chunks_file: ingestion/processed_chunks.jsonl
+    filtered_chunks_file: ingestion/filtered_chunks.jsonl
+    metadata_file: ingestion/metadata_lookup.json
+    type: local
+
+gcp:
+  project_id: ${GCP_PROJECT_ID}
+  location: ${GCP_LOCATION}
+
+vector_search:
+  # Get this from your Vertex AI Vector Search index in GCP Console
+  # Format: projects/PROJECT_ID/locations/LOCATION/indexEndpoints/ENDPOINT_ID
+  endpoint: "projects/fastapidocsrag/locations/us-central1/indexEndpoints/8943209877027684352"
+  deployed_index_id: "fastapidocs_index_1773885930751"  # The actual deployed index ID
+  dimensions: 768
+  top_k: 5
+
+gemini:
+  model: "gemini-2.5-flash"
+  max_tokens: 4096
+  temperature: 0.1
+
+logging:
+  enabled: true
+  log_dir: "./output/logs"
+  log_level: "INFO"
+  log_retention_days: 30
+  include_request_metadata: true
+  include_performance_metrics: true

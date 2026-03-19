@@ -38,7 +38,8 @@ class RAGPipeline:
         
         # Initialize storage
         if self.config.storage_type == "local":
-            self.storage = LocalStorage()
+            # Initialize storage with output base directory (file paths include ingestion subdirectory)
+            self.storage = LocalStorage(base_path=self.config.output_base_dir)
         else:
             raise PipelineError(f"Unsupported storage type: {self.config.storage_type}")
     
@@ -283,7 +284,7 @@ class RAGPipeline:
             
             metadata_file = self.config.get("storage.local.metadata_file", "metadata_lookup.json")
             self.storage.save_metadata(lookup_table, metadata_file)
-            print(f"Created lookup table with {len(lookup_table)} entries")
+            print(f"Created lookup table with {len(lookup_table)} entries in {metadata_file}")
             
         except Exception as e:
             raise StorageError(f"Failed to create lookup table: {e}")
