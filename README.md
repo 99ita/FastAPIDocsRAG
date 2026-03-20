@@ -159,6 +159,45 @@ Markdown Files → LangChain Processors → Chunks → Vertex AI Embeddings → 
 User Query → FastAPI Endpoint → Vertex AI Search → Context → Gemini AI → Response
 ```
 
+## 📊 Query Logs & Monitoring
+
+The system automatically logs detailed query information to help with debugging and performance monitoring:
+
+### Log Location
+- **Directory**: `output/logs/`
+- **Format**: Timestamped JSON log files (e.g., `query-20260319-175223.log`)
+
+### Example Log Entry
+```json
+{
+  "timestamp": "2026-03-19T17:52:23.857738",
+  "elapsed_seconds": 0.002,
+  "stage": "REQUEST_START",
+  "message": "Processing query: How do I create a simple FastAPI application?...",
+  "data": {
+    "query": "How do I create a simple FastAPI application?",
+    "top_n": 5
+  }
+}
+```
+
+### Log Stages
+- **REQUEST_START**: Initial query processing
+- **EMBEDDING_GENERATION**: Vector embedding creation
+- **VECTOR_SEARCH_START**: Document similarity search
+- **CONTEXT_ASSEMBLY**: Retrieved document context assembly
+- **GEMINI_GENERATION_START**: AI answer generation
+- **GEMINI_CALL_COMPLETE**: Final response generation
+
+### Performance Metrics
+Each log entry includes timing information to help track:
+- Embedding generation time
+- Vector search latency
+- Context assembly duration
+- Total query processing time
+
+Use these logs to analyze query patterns, identify performance bottlenecks, and debug issues with specific queries.
+
 ## Architecture Documentation
 
 | Document | Focus | Framework/Model Coverage |
