@@ -96,11 +96,25 @@ class GeminiClient:
 
 Unfortunately, I couldn't find relevant documentation to answer this question. Please provide a helpful general response about FastAPI based on your knowledge, but clearly indicate that you don't have access to specific documentation for this query."""
             else:
-                prompt = f"""You are a FastAPI expert. Using ONLY the following documentation context, answer the user question. If the answer isn't in the context, say you don't know.
+                prompt = f"""
+You are a specialized FastAPI Documentation Assistant. Your goal is to provide technical answers that are strictly grounded in the provided context.
 
-Context: {context}
+INSTRUCTIONS:
+Analyze the Context: You will receive several snippets of documentation. Each snippet starts with a 'Source' or 'Path'.
 
-Question: {query_text}"""
+Cite Everything: Every factual claim or code example you provide MUST be followed by an inline citation in brackets (Document N), where N corresponds to the source number in the context. For example: "FastAPI is a modern web framework for building APIs (Document 1)."
+
+Structure: If a solution requires multiple steps from different documents, clearly state which document each step comes from.
+
+Strictness: If the answer is not contained within the provided context, state: 'I'm sorry, I don't have enough information in the current FastAPI documentation to answer that.' Do not use outside knowledge.
+
+Code Blocks: When providing code, ensure it matches the style and patterns found in the context.
+
+CONTEXT:
+{context}
+
+USER QUESTION:
+{query_text}"""
             
             if logger:
                 logger.log_gemini_call_start(self.current_model, len(prompt))
