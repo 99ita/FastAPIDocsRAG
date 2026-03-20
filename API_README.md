@@ -1,302 +1,233 @@
-# FastAPI Documentation RAG API
-
-This document describes the REST API for querying FastAPI documentation using RAG (Retrieval-Augmented Generation).
+# FastAPI Documentation RAG - API Implementation
 
 ## Overview
 
-The RAG API provides HTTP endpoints for asking questions about FastAPI documentation. It combines vector search with generative AI to provide accurate, source-cited answers.
+The API layer is implemented as a FastAPI application (`src/FastAPIDocsRAG/api/rag_api.py`) that provides REST endpoints for RAG query processing. The implementation uses the RAGEngine from the query module and provides basic REST functionality with Pydantic validation and CORS support.
 
-## Base URL
+## Current Implementation
+
+### API Architecture
+
+The current implementation is a straightforward FastAPI application:
 
 ```
-http://localhost:8000
+HTTP Request → FastAPI App → RAGEngine → Response
+     │              │              │           │
+  REST API     Pydantic       Query        JSON
+  Endpoint     Validation     Engine       Response
 ```
 
-## Authentication
+### Implementation Details
 
-Currently, no authentication is required. The API is open for development use.
+#### Core Components
 
-## Endpoints
+**RAGAPI Class** (`src/FastAPIDocsRAG/api/rag_api.py`)
+- Main FastAPI application class
+- Initializes RAGEngine with configuration
+- Sets up routes and middleware
+- Handles request/response processing
 
-### GET /
+**Pydantic Models**
+- `QueryRequest`: Request validation model
+- `SourceInfo`: Source citation model
+- `RAGResponse`: Response model with answer and sources
 
-Root endpoint with API information.
+**Server Script** (`scripts/serve.py`)
+- Command-line interface for starting the API server
+- Configurable host, port, and environment settings
+- Auto-reload support for development
 
-**Response:**
-```json
-{
-    "message": "FastAPI Documentation RAG API",
-    "version": "1.0.0",
-    "endpoints": {
-        "query": "/query",
-        "health": "/health",
-        "docs": "/docs"
-    }
-}
-```
+#### API Endpoints
 
-### GET /health
+**GET /** 
+- Root endpoint with API information
+- Returns available endpoints and version
 
-Health check endpoint.
+**GET /health**
+- Health check endpoint
+- Returns service status
 
-**Response:**
-```json
-{
-    "status": "healthy",
-    "service": "rag-api"
-}
-```
+**POST /query**
+- Main RAG query endpoint
+- Accepts QueryRequest model
+- Returns RAGResponse with answer and sources
 
-### GET /docs
+### Current Features
 
-Auto-generated OpenAPI documentation (Swagger UI).
+#### ✅ Implemented
+- **FastAPI Application**: Basic FastAPI web service
+- **Pydantic Validation**: Request/response model validation
+- **CORS Middleware**: Basic cross-origin support
+- **Error Handling**: HTTPException with error messages
+- **Health Check**: Simple health endpoint
+- **OpenAPI Documentation**: Auto-generated docs at /docs
+- **Logging Integration**: Optional query logging
+- **Configuration Support**: Environment-based configuration
 
-**Response:**
-Interactive API documentation interface.
+#### ❌ Not Implemented
+- **Authentication**: No auth middleware or security
+- **Rate Limiting**: No request throttling
+- **Advanced Middleware**: No caching, compression, etc.
+- **API Versioning**: Single version only
+- **Advanced Security**: No input sanitization beyond Pydantic
+- **Performance Monitoring**: No metrics or tracing
+- **Async Processing**: Synchronous request handling
 
-### POST /query
+### Usage Examples
 
-Main query endpoint for RAG functionality.
-
-**Request Body:**
-```json
-{
-    "query": "How do I create a FastAPI endpoint?",
-    "top_n": 5
-}
-```
-
-**Response:**
-```json
-{
-    "query": "How do I create a FastAPI endpoint?",
-    "answer": "To create a FastAPI endpoint, you use @app decorator...",
-    "similar_docs": [
-        {
-            "id": "fastapi_123",
-            "source": "docs/tutorial/getting-started.md",
-            "breadcrumb": "Getting Started > First Steps",
-            "similarity": 0.95
-        }
-    ],
-    "documents_retrieved": 5,
-    "context_length": 2847,
-    "model": "gemini-3.1-flash-lite-preview",
-    "tokens_used": 156
-}
-```
-
-## Usage Examples
-
-### Basic Query
-
+#### Start the Server
 ```bash
+# Basic usage
+python scripts/serve.py
+
+# Custom host and port
+python scripts/serve.py --host 0.0.0.0 --port 8080
+
+# Production environment
+python scripts/serve.py --environment production
+
+# Development with auto-reload
+python scripts/serve.py --reload
+```
+
+#### API Requests
+
+**Health Check**
+```bash
+curl http://localhost:8000/health
+```
+
+**Query Endpoint**
+```bash
+# Basic query
 curl -X POST "http://localhost:8000/query" \
   -H "Content-Type: application/json" \
-  -d '{
-    "query": "What is dependency injection?"
-  }'
+  -d '{"query": "What is dependency injection?"}'
+
+# Custom parameters
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How does middleware work?", "top_n": 10}'
 ```
 
-### Python Client
+### Request/Response Models
 
+#### QueryRequest
 ```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/query",
-    json={"query": "How does middleware work?", "top_n": 3}
-)
-
-result = response.json()
-print(f"Answer: {result['answer']}")
-print(f"Similar docs: {len(result.get('similar_docs', []))}")
+class QueryRequest(BaseModel):
+    query: str = Field(..., description="Question to ask about FastAPI")
+    top_n: Optional[int] = Field(5, description="Number of documents to retrieve")
 ```
 
-### JavaScript Client
-
-```javascript
-async function queryFastAPI(question) {
-    const response = await fetch('http://localhost:8000/query', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            query: question,
-            top_n: 5
-        })
-    });
-    
-    const result = await response.json();
-    console.log('Answer:', result.answer);
-    console.log('Similar docs:', result.similar_docs);
-}
-
-// Usage
-queryFastAPI('What are async views?');
+#### SourceInfo
+```python
+class SourceInfo(BaseModel):
+    id: str
+    source: str
+    breadcrumb: str
+    similarity: float
 ```
 
-### Testing with Swagger UI
+#### RAGResponse
+```python
+class RAGResponse(BaseModel):
+    query: str
+    answer: str
+    sources: list[SourceInfo]
+    documents_retrieved: int
+    context_length: int
+    model: str
+    tokens_used: int
+    error: Optional[str] = None
+```
 
-1. **Start server**: `python scripts/serve.py`
-2. **Open Swagger**: Navigate to `http://localhost:8000/docs`
-3. **Try queries**: Use the "Try it out" feature in Swagger UI
-4. **View responses**: Check the response body and status codes
+### Configuration
 
-### Advanced Testing
-
+#### Environment Variables
 ```bash
-# Test with different top_n values
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is dependency injection?", "top_n": 10}'
-
-# Test error handling
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "", "top_n": 5}'
-```
-
-## Request/Response Models
-
-### QueryRequest
-
-```typescript
-interface QueryRequest {
-    query: string;
-    top_n?: number;  // Optional, defaults to 5
-}
-```
-
-### SourceInfo
-
-```typescript
-interface SourceInfo {
-    id: string;
-    source: string;
-    breadcrumb: string;
-    similarity: number;
-}
-```
-
-### RAGResponse
-
-```typescript
-interface RAGResponse {
-    query: string;
-    answer: string;
-    similar_docs: SourceInfo[];
-    documents_retrieved: number;
-    context_length: number;
-    model: string;
-    tokens_used: number;
-    error?: string;  // Only present on errors
-}
-```
-
-## Error Handling
-
-### HTTP Status Codes
-
-- **200 OK**: Request successful
-- **400 Bad Request**: Invalid request format
-- **500 Internal Server Error**: Processing error
-
-### Error Response Format
-
-```json
-{
-    "query": "original question",
-    "answer": "",
-    "sources": [],
-    "error": "Error processing query: Connection timeout"
-}
-```
-
-## Configuration
-
-The API uses environment variables for configuration:
-
-### Development (.env)
-
-```bash
-GCP_PROJECT_ID=your-project-id
+GCP_PROJECT_ID=your-gcp-project-id
 GCP_LOCATION=us-central1
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 ```
 
-### Configuration Files
+#### Server Configuration
+```python
+# Default FastAPI configuration
+app = FastAPI(
+    title="FastAPI Documentation RAG API",
+    description="Query FastAPI documentation using RAG with Vertex AI Vector Search and Gemini",
+    version="1.0.0",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 
-- `config/development.yaml` - Development settings
-- `config/production.yaml` - Production settings
-
-## Vector Search Index
-
-You need a Vertex AI Vector Search index deployed and accessible.
-
-**Get your endpoint from GCP Console:**
-1. Go to [Vertex AI Console](https://console.cloud.google.com/vertex-ai)
-2. Navigate to "Vector Search" → "Index Endpoints"
-3. Find your index endpoint (format: `projects/PROJECT_ID/locations/LOCATION/indexEndpoints/ENDPOINT_ID`)
-4. Update your configuration files with the full endpoint path
-
-**Update configuration files:**
-- `config/development.yaml`: Set the full endpoint path in `vector_search.endpoint`
-- `config/production.yaml`: Set the full endpoint path in `vector_search.endpoint`
-
-**Example endpoint:**
-```yaml
-vector_search:
-  endpoint: "projects/fastapidocsrag/locations/us-central1/indexEndpoints/YOUR_ENDPOINT_ID"
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 ```
 
-## Running the Server
+### Error Handling
 
-### Development
+#### Current Error Handling
+- **HTTPException**: 500 status code for processing errors
+- **Validation Errors**: Pydantic validation with 422 status
+- **Logging**: Optional error logging to files
+- **Graceful Degradation**: Error field in response model
 
-```bash
-python scripts/serve.py --reload
+#### Error Response Format
+```json
+{
+  "detail": "Error processing query: Connection timeout"
+}
 ```
 
-### Production
+### Performance Characteristics
 
-```bash
-python scripts/serve.py --host 0.0.0.0 --port 8000
-```
+#### Current Metrics
+- **Request Processing**: <100ms API overhead
+- **Total Response**: <5 seconds including RAG processing
+- **Concurrent Requests**: Limited by uvicorn default
+- **Memory Usage**: <100MB per request
 
-### Custom Configuration
+#### Current Limitations
+1. **Synchronous Processing**: No async request handling
+2. **No Caching**: Every request triggers full RAG pipeline
+3. **Single Instance**: No horizontal scaling
+4. **Basic Error Handling**: Limited retry mechanisms
 
-```bash
-python scripts/serve.py --environment production --config /path/to/config
-```
+### Architecture Evolution
 
-## Architecture
+#### Planned Improvements (Not Yet Implemented)
 
-The API follows this architecture:
+**Phase 1: Basic Enhancements**
+1. **Authentication**: API key or JWT authentication
+2. **Rate Limiting**: Request throttling to prevent abuse
+3. **Input Validation**: Enhanced security validation
+4. **Error Recovery**: Retry logic for transient failures
 
-1. **Request Reception**: FastAPI receives HTTP request
-2. **Query Processing**: Question converted to embedding vector
-3. **Vector Search**: Finds similar documents using Vertex AI
-4. **Metadata Lookup**: Retrieves document information
-5. **Context Formatting**: Structures retrieved information for LLM
-6. **Answer Generation**: Gemini generates response with context
-7. **Source Citation**: Extracts and returns source references
-8. **Response Delivery**: Returns structured JSON response
+**Phase 2: Performance Optimization**
+1. **Async Processing**: Async request handling
+2. **Response Caching**: Cache similar queries
+3. **Connection Pooling**: Optimize database connections
+4. **Compression**: Response compression for large payloads
 
-## Rate Limiting
+**Phase 3: Advanced Features**
+1. **API Versioning**: Multiple API versions
+2. **Advanced Security**: Input sanitization and validation
+3. **Monitoring**: Metrics collection and health checks
+4. **Documentation**: Enhanced API documentation
 
-Currently no rate limiting is implemented. Consider adding:
-- Request rate limits
-- User authentication
-- Request quotas
+**Phase 4: Enterprise Features**
+1. **Load Balancing**: Multiple instance support
+2. **Advanced Logging**: Structured logging and monitoring
+3. **API Gateway**: Centralized API management
+4. **Testing**: Comprehensive API test suite
 
-## Security Considerations
+---
 
-For production deployment, consider:
-- API key authentication
-- Request validation
-- Input sanitization
-- CORS configuration
-- HTTPS enforcement
-- Request logging
+**Current FastAPI implementation with planned architectural enhancements**

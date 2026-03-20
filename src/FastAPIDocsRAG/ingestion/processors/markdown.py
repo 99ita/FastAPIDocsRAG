@@ -36,30 +36,3 @@ class MarkdownProcessor:
                 print(f"Warning: Failed to read {file_path}: {e}")
         
         return markdown_files
-    
-    @staticmethod
-    def extract_frontmatter(content: str) -> tuple:
-        """
-        Extract frontmatter from markdown content.
-        
-        Args:
-            content: Raw markdown content
-            
-        Returns:
-            Tuple of (frontmatter_dict, content_without_frontmatter)
-        """
-        import re
-        
-        frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*\n(.*)$'
-        match = re.match(frontmatter_pattern, content, re.DOTALL)
-        
-        if match:
-            try:
-                import yaml
-                frontmatter = yaml.safe_load(match.group(1)) or {}
-                content = match.group(2)
-                return frontmatter, content
-            except yaml.YAMLError:
-                pass
-        
-        return {}, content
